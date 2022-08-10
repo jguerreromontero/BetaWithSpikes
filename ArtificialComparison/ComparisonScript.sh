@@ -15,4 +15,4 @@
 input_file=Parameters${SLURM_ARRAY_TASK_ID}.txt
 output_file=output${SLURM_ARRAY_TASK_ID}.txt
  
-./LRAndresArtificialComparison1 $ "Parameters${SLURM_ARRAY_TASK_ID}.txt"
+./LRAndresArtificialComparison1.exe $ "Parameters${SLURM_ARRAY_TASK_ID}.txt"
