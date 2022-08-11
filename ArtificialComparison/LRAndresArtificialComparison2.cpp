@@ -639,8 +639,8 @@ double logProbBWS(double A1, double A0, int T1, int T0, double N, double s)
 		{
 			P0next=P0n(P0ini,P1ini,a,b,s,N);
 			P1next=P1n(P0ini,P1ini,a,b,s,N);
-		    Enext=EApprox(E,V,0);
-		    Vnext=VApprox(E,V,0,N);
+		    Enext=EApprox(E,V,s);
+		    Vnext=VApprox(E,V,s,N);
 			P0ini=P0next;
 			P1ini=P1next;
 			E=Enext;
@@ -1738,15 +1738,15 @@ void GenerateData(string FileName)
 	string Outname;
 	ofstream LRvalues;
 	ifstream ParameterFile;
-	L=500;
+	L=2000;
 	DeltaFactor=0;
-    DeltaT[1]=5;
-    DeltaT[2]=5;
-    DeltaT[3]=5;
-    DeltaT[4]=5;
-    DeltaT[5]=5;
+    DeltaT[1]=10;
+    DeltaT[2]=10;
+    DeltaT[3]=10;
+    DeltaT[4]=10;
+    DeltaT[5]=10;
     for(k=1;k<=5;k++) DeltaFactor=DeltaFactor+DeltaT[k]/5;
-    N=10000;
+    N=1000;
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Aoriginal;
@@ -1783,11 +1783,11 @@ void GenerateData(string FileName)
             }
         }
         LRBWS=LRBetaWithSpikes(A,Time,t,Ndrift,Nsel,Ssel);
-        ErrorS=ErrorS+abs(log(Ssel+1)/DeltaFactor-log(s+1));
+        ErrorS=ErrorS+abs(log(Ssel+1)-log(s+1));
         ErrorN=ErrorN+abs(Nsel-N);
-        AverageS=AverageS+log(Ssel+1)/DeltaFactor;
+        AverageS=AverageS+log(Ssel+1);
         AverageN=AverageN+Nsel;
-        //cout << Nsel << "\t" << ErrorN << "\t" << log(Ssel+1)/DeltaFactor << "\t" << ErrorS << "\t" << l << endl;
+        cout << AverageN/l << "\t" << ErrorN/l << "\t" << AverageS/l << "\t" << ErrorS/l << "\t" << l << endl;
     }
     ErrorN=ErrorN/L;
     ErrorS=ErrorS/L;
