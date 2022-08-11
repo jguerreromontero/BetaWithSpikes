@@ -6,6 +6,7 @@
 #include<cstdlib>
 #include<fstream>
 #include<ctime>
+#include<limits>
 
 #define Tmax 501 //Maximal number of time steps.
 #define hT 1 //Just set to 1.
@@ -208,7 +209,7 @@ double GaussianLNoSel(double A[Tmax], double Time[Tmax], int T, double N)
 //the likelihood ratio without storing data.
 //GL[][]: array that stores the different likelihoods; A[]: time series of allele proportion A; Time[]: real values of time at each time step;
 //T: # of times steps.
-GaussianLMatrix(double GL[nS][nN], double A[Tmax], double Time[Tmax], int T)
+void GaussianLMatrix(double GL[nS][nN], double A[Tmax], double Time[Tmax], int T)
 {
 	int S, N;
 	double hS, realN;
@@ -230,7 +231,7 @@ GaussianLMatrix(double GL[nS][nN], double A[Tmax], double Time[Tmax], int T)
 //the likelihood ratio without storing data.
 //GLvector[]: array that stores the different likelihoods; A[]: time series of allele proportion A; Time[]: real values of time at each time step;
 //T: # of times steps.
-GaussianLVector(double GLvector[nN], double A[Tmax], double Time[Tmax], int T)
+void GaussianLVector(double GLvector[nN], double A[Tmax], double Time[Tmax], int T)
 {
 	int N;
 	double realN;
@@ -859,7 +860,7 @@ double logLikelihoodBWSNoSel(double A[Tmax], int Time[Tmax], int T, double N)
 //the likelihood ratio without storing data.
 //BWSL[][]: array that stores the different likelihoods; A[]: time series of allele proportion A; Time[]: real values of time at each time step;
 //T: # of times steps.
-BWSLMatrix(double BWSL[nS][nN], double A[Tmax], int Time[Tmax], int T)
+void BWSLMatrix(double BWSL[nS][nN], double A[Tmax], int Time[Tmax], int T)
 {
 	int S, N, I;
 	double hS, realN, realS;
@@ -884,7 +885,7 @@ BWSLMatrix(double BWSL[nS][nN], double A[Tmax], int Time[Tmax], int T)
 //the likelihood ratio without storing data.
 //BWSLv[][]: array that stores the different likelihoods; A[]: time series of allele proportion A; Time[]: real values of time at each time step;
 //T: # of times steps.
-BWSLVector(double BWSLv[nN], double A[Tmax], int Time[Tmax], int T)
+void BWSLVector(double BWSLv[nN], double A[Tmax], int Time[Tmax], int T)
 {
 	int N;
 	double realN;
@@ -1273,7 +1274,7 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
 //This function find the maximal likelihood from a matrix, as well as the corresponding values of the population size and the selection.
 //Lmtx[][]: matrix of likelihoods; Nsel: variable to store the population size corresponding to maximal likelihood;
 //Ssel: variable to store the selection coefficient corresponding to maximal likelihood.
-OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, double& Ssel, double& LR)
+void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, double& Ssel, double& LR)
 {
     double Nup, Ndown, N, Na, Nb, Sup, Sdown, S, Sa, Sb, Sprev, Nprev;
     double Lup, Ldown, L, La, Lb, Lprime;
@@ -1727,7 +1728,7 @@ double pValue(double Threshold, int N, int Time[Tmax], int T, double A0)
 }
 
 
-GenerateData(string FileName)
+void GenerateData(string FileName)
 {
     int Time[Tmax], DeltaT[6], N, L, A0, Anext, Aoriginal, Aini, DeltaFactor;
 	double LRBWS, s;
