@@ -2097,15 +2097,15 @@ void GenerateData(string FileName)
 	string Outname;
 	ofstream LRvalues;
 	ifstream ParameterFile;
-	L=500;
+	L=2000;
 	DeltaFactor=0;
-    DeltaT[1]=5;
-    DeltaT[2]=5;
-    DeltaT[3]=5;
-    DeltaT[4]=5;
-    DeltaT[5]=5;
+    DeltaT[1]=10;
+    DeltaT[2]=10;
+    DeltaT[3]=10;
+    DeltaT[4]=10;
+    DeltaT[5]=10;
     for(k=1;k<=5;k++) DeltaFactor=DeltaFactor+DeltaT[k]/5;
-    N=10000;
+    N=1000;
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Aoriginal;
@@ -2146,7 +2146,7 @@ void GenerateData(string FileName)
         ErrorN=ErrorN+abs(Nsel-N);
         AverageS=AverageS+log(Ssel+1);
         AverageN=AverageN+Nsel;
-        //cout << Nsel << "\t" << ErrorN << "\t" << log(Ssel+1)/DeltaFactor << "\t" << ErrorS << "\t" << l << endl;
+        cout << AverageN/l << "\t" << ErrorN/l << "\t" << AverageS/l << "\t" << ErrorS/l << "\t" << l << endl;
     }
     ErrorN=ErrorN/L;
     ErrorS=ErrorS/L;
