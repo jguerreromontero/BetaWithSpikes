@@ -5,7 +5,7 @@
 #SBATCH --job-name=BwSAccuracyComparison
 #SBATCH --partition=short
 #SBATCH --time=2:00:00
-#SBATCH --array=1-8
+#SBATCH --array=1-6
 #
 ########################################################################
  
@@ -14,5 +14,6 @@
 # task which one it is among the whole job array.
 input_file=Parameters${SLURM_ARRAY_TASK_ID}.txt
 output_file=output${SLURM_ARRAY_TASK_ID}.txt
- 
-./LRAndresArtificialComparison1.exe $ "Parameters${SLURM_ARRAY_TASK_ID}.txt"
+filename="Parameters${SLURM_ARRAY_TASK_ID}.txt"
+
+./LRAndresArtificialComparison1.exe $filename
