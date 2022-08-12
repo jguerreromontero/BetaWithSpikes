@@ -2090,23 +2090,24 @@ GCD(int List[Tmax], int Tmax)
 void GenerateData(string FileName)
 {
     int Time[Tmax], DeltaT[6], N, L, A0, Anext, Aoriginal, Aini, DeltaFactor;
-	double LRBWS, s, Xoriginal;
-	double A[Tmax], colour, AverageN, AverageS, ErrorN, ErrorS;
-	int t, j, k, l, ka, ks;
-	double Ndrift, Nsel, Ssel;
-	string Outname;
-	ofstream LRvalues;
-	ifstream ParameterFile;
-	L=2000;
-	DeltaFactor=0;
-    DeltaT[1]=10;
-    DeltaT[2]=10;
-    DeltaT[3]=10;
-    DeltaT[4]=10;
-    DeltaT[5]=10;
-    for(k=1;k<=5;k++) DeltaFactor=DeltaFactor+DeltaT[k]/5;
-    N=1000;
+    double LRBWS, s, Xoriginal;
+    double A[Tmax], colour, AverageN, AverageS, ErrorN, ErrorS;
+    int t, j, k, l, ka, ks;
+    double Ndrift, Nsel, Ssel;
+    string Outname;
+    ofstream LRvalues;
+    ifstream ParameterFile;
+    L=2000;
     // Get s and Aoriginal from file
+    ParameterFile.open("Parameters.txt");
+    ParameterFile >> N;
+    ParameterFile >> DeltaFactor;
+    ParameterFile.close();
+    DeltaT[1]=DeltaFactor;
+    DeltaT[2]=DeltaFactor;
+    DeltaT[3]=DeltaFactor;
+    DeltaT[4]=DeltaFactor;
+    DeltaT[5]=DeltaFactor;
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Xoriginal;
     ParameterFile >> s;
