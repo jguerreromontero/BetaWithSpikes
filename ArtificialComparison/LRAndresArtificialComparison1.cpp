@@ -2136,7 +2136,7 @@ void GenerateData(string FileName)
                 Anext=FindNext(Aini,N,s);
                 Aini=Anext;
             }
-            if(Anext==0||Anext==10000) j--;
+            if(Anext==0) j--;
             else {
                 A[j]=1.0*Anext/N;
                 cout << A[j] << "\t" << Time[j] << "\t";
