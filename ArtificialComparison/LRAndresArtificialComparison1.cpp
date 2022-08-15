@@ -562,7 +562,7 @@ double AdaptiveTrapezoidNode(double a, double b, double s, double N, double true
     double TOL;
     double result;
     //Tolerance. Maybe needs to be made adaptive
-    TOL=0.0001;
+    TOL=0.00001;
     norm=extraN*log(1+s)-logbeta(truea,trueb);
     xmid=0.5*(xmin+xmax);
     if(counter==0)
@@ -591,7 +591,7 @@ double AdaptiveTrapezoidNode(double a, double b, double s, double N, double true
     I2=(termin+2*termid+termax)*0.25*(xmax-xmin);
     //cout << I1 << "\t" << I2 << "\t" << abs(I1-I2)-3*(xmax-xmin)*TOL << "\t" << counter << endl;
     //if(isnan(I1-I2)) cout << xmin << "\t" << xmax << "\t" << norm << "\t" << termin << "\t" << termid << "\t" << termax << "\t" << a << "\t" << b << endl;
-    if(counter>13) result=I2;
+    if(counter>14) result=I2;
     else
     {
         if(abs(I1-I2)<3*(xmax-xmin)*TOL) result=I2;
