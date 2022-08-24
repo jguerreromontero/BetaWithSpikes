@@ -18,7 +18,7 @@
 #define Smin -0.8 //Minimal value of the selection coefficient considered by program.
 #define Smax 4.0 //Maximal value of the selection coefficient considered by program.
 #define MaxStepLimit 100
-#define MAX_SIZE 10000
+#define MAX_SIZE 200
 
 
 
