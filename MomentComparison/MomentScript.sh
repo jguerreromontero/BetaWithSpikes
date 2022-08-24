@@ -5,7 +5,7 @@
 #SBATCH --job-name=BwSAccuracyComparison
 #SBATCH --partition=short
 #SBATCH --time=12:00:00
-#SBATCH --array=1-6
+#SBATCH --array=1-3
 #
 ########################################################################
  
