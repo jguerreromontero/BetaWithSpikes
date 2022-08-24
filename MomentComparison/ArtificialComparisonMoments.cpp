@@ -63,22 +63,41 @@ double WrightFisherLogPDF(int N, double s, int A0, int A)
 {
     int Ao,i;
     double sum;
-    Ao=min(A,N-A);
-    sum=0;
-    for(i=0;i<=Ao-1;i++) sum=sum+log(N-i)-log(Ao-i);
-    sum=sum+A*log(G(s,A*1.0/N))+(N-A)*log(1-G(s,A*1.0/N));
-    return sum;
+    if(A0==0||A0==N)
+    {
+        if(A==A0) sum=0.0;
+        else sum=-numeric_limits<double>::infinity();
+    }
+    else
+    {
+        Ao=min(A,N-A);
+        sum=0;
+        for(i=0;i<=Ao-1;i++) sum=sum+log(N-i)-log(Ao-i);
+        sum=sum+A*log(G(s,A0*1.0/N))+(N-A)*log(1-G(s,A0*1.0/N));
+    }
+    return exp(sum);
 }
 
 void LogMatrixProduct(double A[MAX_SIZE][MAX_SIZE], double B[MAX_SIZE][MAX_SIZE], double C[MAX_SIZE][MAX_SIZE], int actualsize)
 {
     int j, k, l;
+    //for(k=0;k<actualsize;k++)
+    //{
+        /*if(k==0) C[0][k]=0;
+        else C[0][k]=-numeric_limits<double>::infinity();
+        if(k==actualsize-1) C[actualsize-1][k]=0;
+        else C[actualsize-1][k]=-numeric_limits<double>::infinity();*/
+        //if(k==0) C[0][k]=1;
+        //else C[0][k]=-numeric_limits<double>::infinity();
+        //if(k==actualsize-1) C[actualsize-1][k]=0;
+        //else C[actualsize-1][k]=-numeric_limits<double>::infinity();
+    //}
     for(j=0;j<actualsize;j++)
     {
         for(k=0;k<actualsize;k++)
         {
-            C[j][k]=A[j][0]+B[0][k];
-            for(l=1;l<actualsize;l++) C[j][k]=C[j][k]+log(1+exp(A[j][l]+B[l][k]-C[j][k]));
+            C[j][k]=0;
+            for(l=0;l<actualsize;l++) C[j][k]=C[j][k]+A[j][l]*B[l][k];
         }
     }
 }
@@ -86,33 +105,39 @@ void LogMatrixProduct(double A[MAX_SIZE][MAX_SIZE], double B[MAX_SIZE][MAX_SIZE]
 void ExactMean(double A[MAX_SIZE][MAX_SIZE], int N, double EVector[MAX_SIZE])
 {
     int i, A0;
+    //cout << "Mean\t";
     for(A0=0;A0<=N;A0++)
     {
         EVector[A0]=0;
         for(i=1;i<=N;i++) EVector[A0]=EVector[A0]+i*A[A0][i]/N;
+        //cout << EVector[A0] << "\t";
     }
+    //cout << endl;
 }
 
 void ExactVariance(double A[MAX_SIZE][MAX_SIZE], int N, double VVector[MAX_SIZE], double EVector[MAX_SIZE])
 {
     int i, A0;
+    //cout << "Variance\t";
     for(A0=0;A0<=N;A0++)
     {
         VVector[A0]=0;
-        for(i=0;i<=N;i++) VVector[A0]=VVector[A0]+(i/N-EVector[A0])*(i/N-EVector[A0])*A[A0][i];
+        for(i=0;i<=N;i++)VVector[A0]=VVector[A0]+(i*1.0/N-EVector[A0])*(i*1.0/N-EVector[A0])*A[A0][i];
+        //cout << endl << VVector[A0] << endl;
     }
+    //cout << endl;
 }
 
 void ExactP0(double A[MAX_SIZE][MAX_SIZE], int N, double P0Vector[MAX_SIZE])
 {
     int A0;
-    for(A0=0;A0<=N;A0++) P0Vector[A0]=exp(A[A0][0]);
+    for(A0=0;A0<=N;A0++) P0Vector[A0]=A[A0][0];
 }
 
 void ExactP1(double A[MAX_SIZE][MAX_SIZE], int N, double P1Vector[MAX_SIZE])
 {
     int A0;
-    for(A0=0;A0<=N;A0++) P1Vector[A0]=exp(A[A0][N]);
+    for(A0=0;A0<=N;A0++) P1Vector[A0]=A[A0][N];
 }
 
 //This function generates the logarithm of the cumulative Wright-Fisher distribution.
@@ -551,6 +576,7 @@ void ApproxMoments(double P0[MAX_SIZE], double P1[MAX_SIZE], double E[MAX_SIZE],
     }
 }
 
+
 //////////////////////////////////////////////
 // 5. FUNCTIONS USED TO GENERATE THE OUTPUT //
 //////////////////////////////////////////////
@@ -598,9 +624,9 @@ void GenerateData(string FileName)
         Ef[j]=Em[j];
         Vm[j]=x*(1-x)/N;
         Vf[j]=Vm[j];
-        P0m[j]=exp(N*(1-x));
+        P0m[j]=exp(N*log(1-x));
         P0f[j]=P0m[j];
-        P1m[j]=exp(N*x);
+        P1m[j]=exp(N*log(x));
         P1f[j]=P1m[j];
     }
     ExactMean(ProbBase,N,Ee);
@@ -625,7 +651,7 @@ void GenerateData(string FileName)
         LRvalues << endl;
         LRvalues.close();
     }
-    for(t=2;t<=T;k++)
+    for(t=2;t<=T;t++)
     {
         LogMatrixProduct(ProbBase,Prob,ProbNext,N+1);
         for(j=0;j<=N;j++) for(k=0;k<=N;k++) Prob[j][k]=ProbNext[j][k];
@@ -638,7 +664,7 @@ void GenerateData(string FileName)
         for(l=0;l<=7;l++)
         {
             LRvalues.open(Outname[l].c_str(), fstream::app);
-            LRvalues << "1\t";
+            LRvalues << t << "\t";
             for(j=0;j<=N;j++)
             {
                 if(l==0) LRvalues << abs(Ee[j]-Ef[j]) << "\t";
