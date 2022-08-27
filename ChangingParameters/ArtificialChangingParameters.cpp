@@ -2019,7 +2019,7 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
     Lmax=Lnodiv;
     param[0]=N0;
     param[1]=S0;
-    cout << "Nodiv i" << Lnodiv << endl;
+    //cout << "Nodiv i" << Lnodiv << endl;
     for(i=2;i<=T-2;i=min(i+5,T-1))
     {
         N1=100;
@@ -2031,7 +2031,7 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
         }
         OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
         OptimiseSelection(A1,Time,T-i,N2,S2,Ldiv2);
-        cout << "i" << Ldiv1+Ldiv2 << endl;
+        //cout << "i" << Ldiv1+Ldiv2 << endl;
         if(Ldiv1+Ldiv2>Lmax)
         {
             Lmax=Ldiv1+Ldiv2;
@@ -2054,7 +2054,7 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
         }
         OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
         OptimiseSelection(A1,Time,T-i,N2,S2,Ldiv2);
-        cout << "i" << Ldiv1+Ldiv2 << endl;
+        //cout << "i" << Ldiv1+Ldiv2 << endl;
         if(Ldiv1+Ldiv2>Lmax)
         {
             Lmax=Ldiv1+Ldiv2;
@@ -2098,7 +2098,7 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 			}
 			//A1=FindNext(A1,N,0);
 			A[t]=A1*1.0/N;
-			cout << A[t] << endl;
+			//cout << A[t] << endl;
 			//Time[t]=t;
 			Aini=A1;
 			tlimit=t;
@@ -2106,7 +2106,7 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 		}
 		if(numberofT>T/2)
         {
-            cout << tlimit << endl;
+            //cout << tlimit << endl;
             TimespanDivision(A,Time,tlimit,Tdiv,LRvalue,param);
             //cout << LRvalue << "\t" << Nsel << "\t" << Ssel << endl;
             //if(LRvalue>Threshold) counter++;
