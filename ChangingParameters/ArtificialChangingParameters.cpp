@@ -2078,8 +2078,9 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 	L=500;
 	for(l=0;l<L;l++)
 	{
+		if(l%100==0) cout << l << endl;
 		A[0]=A0;
-		cout << A[0] << endl;
+		//cout << A[0] << endl;
 		Aini=round(N*A0);
 		if(Aini==0) Aini=1;
 		if(Aini==N) Aini=N-1;
@@ -2257,6 +2258,7 @@ void GenerateData(string FileName)
 	cout << averageP << endl;
     for(l=1;l<=L;l++)
     {
+	cout << "Series number " << l << endl;
         t=20;
         A0=Aoriginal;
         Time[0]=0;
@@ -2274,7 +2276,7 @@ void GenerateData(string FileName)
             if(Anext==0||Anext==10000) j--;
             else {
                 A[j]=1.0*Anext/N;
-                cout << A[j] << "\t" << Time[j] << "\t";
+                //cout << A[j] << "\t" << Time[j] << "\t";
                 A0=Anext;
             }
         }
