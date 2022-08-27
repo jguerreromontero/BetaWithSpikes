@@ -2235,7 +2235,7 @@ void GenerateData(string FileName)
     s1=exp(s1)-1;
     s2=exp(s2)-1;
     //Prep the simulation
-    Outname = FileName + "ChangingParametersResults.txt";
+    Outname = "ChangingParametersResults" + to_string(s1) +to_string(s2) +to_string(TrueDiv) +".txt";
 	cout << "Named file " << Outname << endl;
     LRvalues.open(Outname.c_str());
     cout << "Opened file" << endl;
