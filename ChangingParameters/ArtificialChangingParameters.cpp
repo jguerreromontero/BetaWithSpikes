@@ -2132,7 +2132,7 @@ double pValue(double Threshold, int N, int Time[Tmax], int T, double A0)
 	double A[T], LRvalue, p, A1, Aini;
 	double Ndrift, Nsel, Ssel;
 	counter=0;
-	L=500; //I CHANGED THIS FROM 500
+	L=100; //I CHANGED THIS FROM 500
 	for(l=0;l<L;l++)
 	{
 		A[0]=A0;
@@ -2216,11 +2216,11 @@ void GenerateData(string FileName)
 	string Outname;
 	ofstream LRvalues;
 	ifstream ParameterFile;
-	L=500;
+	L=100;
 	DeltaFactor=0;
 	for(i=0;i<=20;i++) DeltaT[i]=1;
     for(k=1;k<=5;k++) DeltaFactor=DeltaFactor+DeltaT[k]/5;
-    N=10000;
+    N=1000;
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Ao;
@@ -2289,11 +2289,11 @@ void GenerateData(string FileName)
 		errorS2=errorS2+abs(log(param[5]+1)-log(s2+1))/L;
 		errorTDiv=errorTDiv+abs(TrueDiv-Tdiv)/L;
         averageS1=averageS1+log(param[3]+1)/L;
-        averageS2=averageS2+log(param[3]+1)/L;
+        averageS2=averageS2+log(param[5]+1)/L;
         averageTDiv=averageTDiv+Tdiv*1.0/L;
         averageP=averageP+colour/L;
         if(colour<0.05) Psuccess=Psuccess+1.0/L;
-        //cout << Nsel << "\t" << ErrorN << "\t" << log(Ssel+1)/DeltaFactor << "\t" << ErrorS << "\t" << l << endl;
+        if(l%10==0) cout << "Interim result" << average S1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << endl;
     }
     cout << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
 
