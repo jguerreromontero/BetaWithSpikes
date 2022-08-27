@@ -2235,9 +2235,9 @@ void GenerateData(string FileName)
     s1=exp(s1)-1;
     s2=exp(s2)-1;
     //Prep the simulation
-    Outname = "ChangingParametersResults" + to_string(s1) +to_string(s2) +to_string(TrueDiv) +".txt";
-	cout << "Named file " << Outname << endl;
-    LRvalues.open(Outname.c_str());
+    //Outname = "ChangingParametersResults" + to_string(s1) +to_string(s2) +to_string(TrueDiv) +".txt";
+	//cout << "Named file " << Outname << endl;
+    //LRvalues.open(Outname.c_str());
     cout << "Opened file" << endl;
     errorS1=0;
 	cout << errorS1 << endl;
@@ -2293,9 +2293,9 @@ void GenerateData(string FileName)
         if(colour<0.05) Psuccess=Psuccess+1.0/L;
         //cout << Nsel << "\t" << ErrorN << "\t" << log(Ssel+1)/DeltaFactor << "\t" << ErrorS << "\t" << l << endl;
     }
-    LRvalues << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
+    cout << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
 
-	LRvalues.close();
+	//LRvalues.close();
 }
 
 
