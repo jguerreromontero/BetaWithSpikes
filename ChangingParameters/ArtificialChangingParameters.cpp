@@ -2227,6 +2227,7 @@ void GenerateData(string FileName)
     ParameterFile >> s2;
     ParameterFile >> TrueDiv;
     ParameterFile.close();
+    Aoriginal=round(Aoriginal*N);
     s1=exp(s1)-1;
     s2=exp(s2)-1;
     //Prep the simulation
