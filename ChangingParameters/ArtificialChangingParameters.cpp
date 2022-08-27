@@ -2237,14 +2237,23 @@ void GenerateData(string FileName)
     //Prep the simulation
     Outname = FileName + "ChangingParametersResults.txt";
     LRvalues.open(Outname.c_str());
+    cout << "Opened file" << endl;
     errorS1=0;
+	cout << errorS1 << endl;
     errorS2=0;
+	cout << errorS2 << endl;
     errorTDiv=0;
+	cout << errorTDiv << endl;
     Psuccess=0;
+	cout << Psuccess << endl;
     averageS1=0;
+	cout << averageS1 << endl;
     averageS2=0;
+	cout << averageS1 << endl;
     averageTDiv=0;
+	cout << averageTDiv << endl;
     averageP=0;
+	cout << averageP << endl;
     for(l=1;l<=L;l++)
     {
         t=20;
