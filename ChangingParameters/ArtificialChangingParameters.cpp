@@ -2206,7 +2206,7 @@ GCD(int List[Tmax], int Tmax)
 void GenerateData(string FileName)
 {
     int Time[Tmax], DeltaT[6], L, N, A0, Anext, Aoriginal, Aini, DeltaFactor;
-	double LRBWS, s1, s2, TrueDiv, param[6];
+	double LRBWS, s1, s2, TrueDiv, param[6], Ao;
 	double A[Tmax], colour, LR;
 	int Tdiv;
 	int t, i, j, k, l, ka, ks;
@@ -2222,12 +2222,12 @@ void GenerateData(string FileName)
     N=10000;
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
-    ParameterFile >> Aoriginal;
+    ParameterFile >> Ao;
     ParameterFile >> s1;
     ParameterFile >> s2;
     ParameterFile >> TrueDiv;
     ParameterFile.close();
-    Aoriginal=round(Aoriginal*N);
+    Aoriginal=(int)round(Ao*N);
     s1=exp(s1)-1;
     s2=exp(s2)-1;
     //Prep the simulation
