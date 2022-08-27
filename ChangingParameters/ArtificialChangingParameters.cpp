@@ -2223,9 +2223,13 @@ void GenerateData(string FileName)
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Ao;
+    cout << Ao << endl;
     ParameterFile >> s1;
+    cout << s1 << endl;
     ParameterFile >> s2;
+    cout << s2 << endl;
     ParameterFile >> TrueDiv;
+    cout << TrueDiv << endl;
     ParameterFile.close();
     Aoriginal=(int)round(Ao*N);
     s1=exp(s1)-1;
