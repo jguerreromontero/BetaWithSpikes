@@ -2293,7 +2293,7 @@ void GenerateData(string FileName)
         averageTDiv=averageTDiv+Tdiv*1.0/L;
         averageP=averageP+colour/L;
         if(colour<0.05) Psuccess=Psuccess+1.0/L;
-        if(l%10==0) cout << "Interim result" << average S1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << endl;
+        if(l%10==0) cout << "Interim result" << averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << endl;
     }
     cout << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
 
