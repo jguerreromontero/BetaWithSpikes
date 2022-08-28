@@ -1582,9 +1582,6 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
     return S;
 }
 
-//This function find the maximal likelihood from a matrix, as well as the corresponding values of the population size and the selection.
-//Lmtx[][]: matrix of likelihoods; Nsel: variable to store the population size corresponding to maximal likelihood;
-//Ssel: variable to store the selection coefficient corresponding to maximal likelihood.
 void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, double& Ssel, double& LR)
 {
     double Nup, Ndown, N, Na, Nb, Sup, Sdown, S, Sa, Sb, Sprev, Nprev;
@@ -1800,7 +1797,7 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, doub
                 }
             }
             theresmax=false;
-            while((Nup-Ndown)/Ndown>0.001)
+            do
             {
                 if(!theresmax)
                 {
@@ -1811,8 +1808,8 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, doub
                 Nb=0.75*Nup+0.25*Ndown;
                 La=logLikelihoodBWS(A,Time,T,Na,S);
                 Lb=logLikelihoodBWS(A,Time,T,Nb,S);
-                //cout << "List N " << "\t" << Ndown << "\t" << Na << "\t" << N << "\t" << Nb << "\t" << Nup << endl;
-                //cout << "List NL" << "\t" << Ldown << "\t" << La << "\t" << L << "\t" << Lb << "\t" << Lup << endl;
+                cout << "List N " << "\t" << Ndown << "\t" << Na << "\t" << N << "\t" << Nb << "\t" << Nup << endl;
+                cout << "List NL" << "\t" << Ldown << "\t" << La << "\t" << L << "\t" << Lb << "\t" << Lup << endl;
                 if(La<Ldown)
                 {
                     theresmax=false;
@@ -1854,7 +1851,7 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, doub
                     }
                 }
                 //cout << theresmax << upmax << lomax << endl;
-            }
+            }while((Nup-Ndown)/Ndown>0.001);
             if(!upmax&&((NmaxIni-Ndown)/Ndown<=0.001))
             {
                 Nprime=Nup;
@@ -1974,7 +1971,7 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
         {
             Ndrift=OptimiseDrift(A,Time,T,LRd);
             Nsel=numeric_limits<double>::infinity();
-            Ssel=OptimiseSParameter(A,Time,T,Ndrift);
+            Ssel=OptimiseSParameter(A,Time,T,Ndrift,LRs);
             if(0<LRd) return 0;
             else return -2*LRd;
         }
