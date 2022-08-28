@@ -1,7 +1,7 @@
 #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
 #include<iostream>
 #include<cmath>
-#include<string.h>
+#include<string>
 #include<sstream>
 #include<cstdlib>
 #include<fstream>
@@ -1439,7 +1439,6 @@ double OptimiseDrift(double A[Tmax], int Time[Tmax], int T, double& LR)
 }*/
 
 
-
 double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, double& LR)
 {
     double Sup, Sdown, S, Sa, Sb, Sprev;
@@ -1587,7 +1586,9 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
     return S;
 }
 
-
+//This function find the maximal likelihood from a matrix, as well as the corresponding values of the population size and the selection.
+//Lmtx[][]: matrix of likelihoods; Nsel: variable to store the population size corresponding to maximal likelihood;
+//Ssel: variable to store the selection coefficient corresponding to maximal likelihood.
 void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, double& Ssel, double& LR)
 {
     double Nup, Ndown, N, Na, Nb, Sup, Sdown, S, Sa, Sb, Sprev, Nprev;
@@ -2012,12 +2013,12 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
 // 5. FUNCTIONS USED TO GENERATE THE OUTPUT //
 //////////////////////////////////////////////
 
-void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& L, double param[6])
+void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], int& Tdiv, double& L)
 {
-   int i,j, imax;
+    int i,j, imax;
     double Ldiv1, Ldiv2, Lnodiv, Lmax, A1[Tmax], T1[Tmax];
     double N0, S0, N1, S1, N2, S2;
-    N0=1000;
+    N0=N;
     //OptimiseSelection(A,Time,T,N0,S0,Lnodiv);
     //cout << "Pre Optimise 0 " <<  param[0] << param[1] << param[2] << param[3] << param[4] << param[5] << param[6] << endl;
     S0=OptimiseSParameter(A,Time,T,N0,Lnodiv);
@@ -2034,8 +2035,8 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
     for(i=2;i<=T-2;i++)
     {
         //cout << "E " << A[T] << "\t" << T << endl;
-        N1=1000;
-        N2=1000;
+        N1=N;
+        N2=N;
         //cout << "F " << A[T] << "\t" << T << endl;
         for(j=0;j<=T-i;j++)
         {
@@ -2094,10 +2095,9 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 	double Ndrift, Nsel, Ssel;
 	double param[6];
 	counter=0;
-	L=500;
+	L=100;
 	for(l=0;l<L;l++)
 	{
-		if(l%100==0) cout << l << endl;
 		A[0]=A0;
 		//cout << A[0] << endl;
 		Aini=round(N*A0);
@@ -2118,20 +2118,22 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 			}
 			//A1=FindNext(A1,N,0);
 			A[t]=A1*1.0/N;
-			//cout << A[t] << endl;
+			//cout << A[t] << "\t" << Time[t] << "\t";
 			//Time[t]=t;
 			Aini=A1;
 			tlimit=t;
 			if((A1==0)||(A1==N)) break;
 		}
+		//cout << param[0] << endl;
 		if(numberofT>T/2)
         {
+            //cout << param[0] << endl;
             //cout << tlimit << endl;
-            TimespanDivision(A,Time,tlimit,Tdiv,LRvalue,param);
+            TimespanDivision(A,Time,tlimit,param,Tdiv,LRvalue,N);
             //cout << LRvalue << "\t" << Nsel << "\t" << Ssel << endl;
             //if(LRvalue>Threshold) counter++;
             if(LRvalue/numberofT>Threshold/T) counter++; //normalised by the amount of intervals, NOT the amount of time points.
-            if(l%100==0) cout << "\tPass100\t";
+            if(l%10==0) cout << "\tPass10\t";
         }
         else l--;
 	}
@@ -2151,7 +2153,7 @@ double pValue(double Threshold, int N, int Time[Tmax], int T, double A0)
 	double A[T], LRvalue, p, A1, Aini;
 	double Ndrift, Nsel, Ssel;
 	counter=0;
-	L=100; //I CHANGED THIS FROM 500
+	L=500; //I CHANGED THIS FROM 500
 	for(l=0;l<L;l++)
 	{
 		A[0]=A0;
@@ -2239,7 +2241,6 @@ void GenerateData(string FileName)
 	DeltaFactor=0;
 	for(i=0;i<=20;i++) DeltaT[i]=1;
     for(k=1;k<=5;k++) DeltaFactor=DeltaFactor+DeltaT[k]/5;
-    N=1000;
     // Get s and Aoriginal from file
     ParameterFile.open(FileName.c_str());
     ParameterFile >> Ao;
@@ -2250,6 +2251,8 @@ void GenerateData(string FileName)
     cout << s2 << endl;
     ParameterFile >> TrueDiv;
     cout << TrueDiv << endl;
+    ParameterFile >> N;
+    cout << N << endl;
     ParameterFile.close();
     Aoriginal=(int)round(Ao*N);
     s1=exp(s1)-1;
@@ -2258,26 +2261,17 @@ void GenerateData(string FileName)
     //Outname = "ChangingParametersResults" + to_string(s1) +to_string(s2) +to_string(TrueDiv) +".txt";
 	//cout << "Named file " << Outname << endl;
     //LRvalues.open(Outname.c_str());
-    cout << "Opened file" << endl;
     errorS1=0;
-	cout << errorS1 << endl;
     errorS2=0;
-	cout << errorS2 << endl;
     errorTDiv=0;
-	cout << errorTDiv << endl;
     Psuccess=0;
-	cout << Psuccess << endl;
     averageS1=0;
-	cout << averageS1 << endl;
     averageS2=0;
-	cout << averageS1 << endl;
     averageTDiv=0;
-	cout << averageTDiv << endl;
     averageP=0;
-	cout << averageP << endl;
+    //cout << "hello?" << endl;
     for(l=1;l<=L;l++)
     {
-	cout << "Series number " << l << endl;
         t=20;
         A0=Aoriginal;
         Time[0]=0;
@@ -2285,8 +2279,9 @@ void GenerateData(string FileName)
         for(j=1;j<=t;j++)
         {
             Aini=A0;
+            //Time[j]=Time[j-1]+DeltaT[j];
             Time[j]=Time[j-1]+1;
-            for(k=1;k<=DeltaT[j];k++)
+            for(k=1;k<=1;k++) //changed from DeltaT[j]
             {
                 if(Time[j-1]+k<TrueDiv) Anext=FindNext(Aini,N,s1);
                 else Anext=FindNext(Aini,N,s2);
@@ -2295,15 +2290,17 @@ void GenerateData(string FileName)
             if(Anext==0||Anext==10000) j--;
             else {
                 A[j]=1.0*Anext/N;
-                //cout << A[j] << "\t" << Time[j] << "\t";
+                cout << A[j] << "\t" << Time[j] << "\t";
                 A0=Anext;
             }
         }
-		TimespanDivision(A,Time,t,Tdiv,LR,param);
+        //cout << A0 << endl;
+		TimespanDivision(A,Time,t,param,Tdiv,LR,N);
+		cout << "DIVISION " << Tdiv << endl;
 		//(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& L, double param[6])
 		//LRG=LRGaussian(A,Time,t);
 		//LRBWS=LRBetaWithSpikes(A,Time,t,Ndrift,Nsel,Ssel);
-		colour=pValueTimeDiv(LR,int(ceil(param[0])),param[1],Time,t,A[0]);
+		colour=pValueTimeDiv(LR,N,param[1],Time,t,A[0]);
 		errorS1=errorS1+abs(log(param[3]+1)-log(s1+1))/L;
 		errorS2=errorS2+abs(log(param[5]+1)-log(s2+1))/L;
 		errorTDiv=errorTDiv+abs(TrueDiv-Tdiv)/L;
@@ -2312,13 +2309,15 @@ void GenerateData(string FileName)
         averageTDiv=averageTDiv+Tdiv*1.0/L;
         averageP=averageP+colour/L;
         if(colour<0.05) Psuccess=Psuccess+1.0/L;
-        if(l%10==0) cout << "Interim result" << averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << endl;
+        cout << "Interim: " << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1*L/l
+         << "\t" << averageS2*L/l << "\t" << averageTDiv*L/l
+         << "\t" << averageP*L/l << "\t" << Psuccess*L/l << endl;
+        //cout << Nsel << "\t" << ErrorN << "\t" << log(Ssel+1)/DeltaFactor << "\t" << ErrorS << "\t" << l << endl;
     }
-    cout << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t" << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
+    cout << N << Aoriginal << "\t" << log(s1+1) << "\t" << log(s2+1) << "\t" <<averageS1 << "\t"
+     << averageS2 << "\t" << averageTDiv << "\t" << averageP << "\t" << Psuccess << endl;
 
-	//LRvalues.close();
 }
-
 
 ///////////////////
 // MAIN FUNCTION //
