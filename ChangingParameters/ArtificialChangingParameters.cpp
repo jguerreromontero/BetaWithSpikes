@@ -2013,7 +2013,7 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
 // 5. FUNCTIONS USED TO GENERATE THE OUTPUT //
 //////////////////////////////////////////////
 
-void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], int& Tdiv, double& L)
+void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], int& Tdiv, double& L, int N)
 {
     int i,j, imax;
     double Ldiv1, Ldiv2, Lnodiv, Lmax, A1[Tmax], T1[Tmax];
