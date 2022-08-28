@@ -2011,26 +2011,41 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
 
 void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& L, double param[6])
 {
-    int i,j, imax;
+   int i,j, imax;
     double Ldiv1, Ldiv2, Lnodiv, Lmax, A1[Tmax], T1[Tmax];
     double N0, S0, N1, S1, N2, S2;
-    N0=100;
-    OptimiseSelection(A,Time,T,N0,S0,Lnodiv);
+    N0=1000;
+    //OptimiseSelection(A,Time,T,N0,S0,Lnodiv);
+    //cout << "Pre Optimise 0 " <<  param[0] << param[1] << param[2] << param[3] << param[4] << param[5] << param[6] << endl;
+    S0=OptimiseSParameter(A,Time,T,N0,Lnodiv);
+    //cout << "Post Optimise 0 " << A[T] << "\t" << T << endl;
     Lmax=Lnodiv;
-    param[0]=N0;
+    //cout << "A " << A[T] << "\t" << T << endl;
+    //param[0]=N0;
+    //cout << "B " << A[T] << "\t" << T << endl;
     param[1]=S0;
+    //cout << "C " << A[T] << "\t" << T << endl;
     //cout << "Nodiv i" << Lnodiv << endl;
-    for(i=2;i<=T-2;i=min(i+5,T-1))
+    //cout << "D " << A[T] << "\t" << T << endl;
+    //for(i=2;i<=T-2;i=min(i+5,T-1))
+    for(i=2;i<=T-2;i++)
     {
-        N1=100;
-        N2=100;
+        //cout << "E " << A[T] << "\t" << T << endl;
+        N1=1000;
+        N2=1000;
+        //cout << "F " << A[T] << "\t" << T << endl;
         for(j=0;j<=T-i;j++)
         {
             A1[j]=A[j+i];
             T1[j]=Time[j+i];
+            //cout << A1[j] << A[j+i] << "\t" << j+i << "\t";
         }
-        OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
-        OptimiseSelection(A1,Time,T-i,N2,S2,Ldiv2);
+        //cout << endl;
+        //OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
+        //OptimiseSelection(A1,Time,T-i,N2,S2,Ldiv2);
+        S1=OptimiseSParameter(A,Time,i,N1,Ldiv1);
+        //for(j=0;j<=T-i;j++) cout << A1[j] << "\t" << Time[j] << "\t";
+        S2=OptimiseSParameter(A1,Time,T-i,N2,Ldiv2);
         //cout << "i" << Ldiv1+Ldiv2 << endl;
         if(Ldiv1+Ldiv2>Lmax)
         {
@@ -2043,10 +2058,10 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
             imax=i;
         }
     }
-    for(i=max(imax-5,2);i<=min(imax+5,T-2);i++)
+    /*for(i=max(imax-5,2);i<=min(imax+5,T-2);i++)
     {
-        N1=100;
-        N2=100;
+        N1=1000;
+        N2=1000;
         for(j=0;j<=T-i;j++)
         {
             A1[j]=A[j+i];
@@ -2054,7 +2069,7 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
         }
         OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
         OptimiseSelection(A1,Time,T-i,N2,S2,Ldiv2);
-        //cout << "i" << Ldiv1+Ldiv2 << endl;
+        cout << "i" << Ldiv1+Ldiv2 << endl;
         if(Ldiv1+Ldiv2>Lmax)
         {
             Lmax=Ldiv1+Ldiv2;
@@ -2064,7 +2079,8 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T, int& Tdiv, double& 
             param[5]=S2;
             Tdiv=Time[i];
         }
-    }
+    }*/
+    param[0]=1000;
     L=Lmax-Lnodiv;
 }
 
