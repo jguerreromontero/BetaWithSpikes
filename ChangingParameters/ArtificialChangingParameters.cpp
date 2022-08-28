@@ -2285,7 +2285,7 @@ void GenerateData(string FileName)
         for(j=1;j<=t;j++)
         {
             Aini=A0;
-            Time[j]=Time[j-1]+DeltaT[j];
+            Time[j]=Time[j-1]+1;
             for(k=1;k<=DeltaT[j];k++)
             {
                 if(Time[j-1]+k<TrueDiv) Anext=FindNext(Aini,N,s1);
