@@ -1439,7 +1439,8 @@ double OptimiseDrift(double A[Tmax], int Time[Tmax], int T, double& LR)
 }*/
 
 
-double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
+
+double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, double& LR)
 {
     double Sup, Sdown, S, Sa, Sb, Sprev;
     double Lup, Ldown, L, La, Lb;
@@ -1449,6 +1450,7 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
     Sprev=S;
     upmax=false;
     lomax=false;
+    //cout <<"entered" << endl;
     SmaxIni=ComputeSMaxIni(A,Time,T,N);
     SminIni=ComputeSMinIni(A,Time,T,N);
     Sup=SmaxIni;
@@ -1505,6 +1507,7 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
         //cout << upmax << lomax << endl;
         do
         {
+            //cout << "hi" << endl;
             if(!theresmax)
             {
                 S=(Sup+Sdown)*0.5;
@@ -1558,6 +1561,7 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
             }
             //cout << theresmax << upmax << lomax << endl;
         }while((Sup-Sdown)>0.001);
+        //cout << "out" << upmax << lomax << endl;
         if(!upmax&&(SmaxIni-Sdown)<=0.001)
         {
             Sdown=Sb;
@@ -1579,8 +1583,10 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N)
             //cout << "New SminIni " << SminIni << endl;
         }
     }
+    LR=L;
     return S;
 }
+
 
 void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& Nsel, double& Ssel, double& LR)
 {
