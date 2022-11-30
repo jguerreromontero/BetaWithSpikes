@@ -2092,7 +2092,7 @@ void GenerateData(string FileName)
     int Time[Tmax], DeltaT[6], N, L, A0, Anext, Aoriginal, Aini, DeltaFactor;
     double LRBWS, s, Xoriginal;
     double A[Tmax], colour, AverageN, AverageS, ErrorN, ErrorS;
-    int t, j, k, l, ka, ks;
+    int t, j, k, l, ka, ks, countbad;
     double Ndrift, Nsel, Ssel;
     string Outname;
     ofstream LRvalues;
@@ -2121,6 +2121,7 @@ void GenerateData(string FileName)
     ErrorS=0;
     AverageN=0;
     AverageS=0;
+    countbad=0;
     for(l=1;l<=L;l++)
     {
         t=5;
@@ -2136,7 +2137,7 @@ void GenerateData(string FileName)
                 Anext=FindNext(Aini,N,s);
                 Aini=Anext;
             }
-            if(Anext==0) j--;
+            if(Anext==0||Anext==10000) j--;
             else {
                 A[j]=1.0*Anext/N;
                 cout << A[j] << "\t" << Time[j] << "\t";
@@ -2144,17 +2145,24 @@ void GenerateData(string FileName)
             }
         }
         LRBWS=LRBetaWithSpikes(A,Time,t,Ndrift,Nsel,Ssel);
-        ErrorS=ErrorS+abs(log(Ssel+1)-log(s+1));
-        ErrorN=ErrorN+abs(Nsel-N);
-        AverageS=AverageS+log(Ssel+1);
-        AverageN=AverageN+Nsel;
-        cout << AverageN/l << "\t" << ErrorN/l << "\t" << AverageS/l << "\t" << ErrorS/l << "\t" << l << endl;
+        if(Ssel!=0)
+        {
+            ErrorS=ErrorS+abs(log(Ssel+1)-log(s+1));
+            ErrorN=ErrorN+abs(Nsel-N);
+            AverageS=AverageS+log(Ssel+1);
+            AverageN=AverageN+Nsel;
+            cout << AverageN/(l-countbad) << "\t" << ErrorN/(l-countbad) << "\t" << AverageS/(l-countbad) << "\t" << ErrorS/(l-countbad) << "\t" << l << "\t" << countbad << endl;
+        }
+        else
+        {
+            countbad++;
+        }
     }
-    ErrorN=ErrorN/L;
-    ErrorS=ErrorS/L;
-    AverageN=AverageN/L;
-    AverageS=AverageS/L;
-    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" <<AverageN << "\t" << ErrorN << "\t" << AverageS << "\t" << ErrorS << endl;
+    ErrorN=ErrorN/(L-countbad);
+    ErrorS=ErrorS/(L-countbad);
+    AverageN=AverageN/(L-countbad);
+    AverageS=AverageS/(L-countbad);
+    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" <<AverageN << "\t" << ErrorN << "\t" << AverageS << "\t" << ErrorS << "\t" << countbad << endl;
 
 	LRvalues.close();
 }
