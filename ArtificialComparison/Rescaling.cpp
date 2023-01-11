@@ -2157,12 +2157,12 @@ void GenerateData(string FileName)
               }
               else
               {
-                ErrorS[i]=ErrorS[i]+abs(log(Ssel+1)-log(S1+1))/log(S1+1);
-                ErrorN[i]=ErrorN[i]+abs(Nsel-N1)/N1;
-                AverageS[i]=AverageS[i]+log(Ssel+1)/log(S1+1);
-                AverageN[i]=AverageN[i]+Nsel/N1;
+                ErrorS[i-2]=ErrorS[i-2]+abs(log(Ssel+1)-log(S1+1))/log(S1+1);
+                ErrorN[i-2]=ErrorN[i-2]+abs(Nsel-N1)/N1;
+                AverageS[i-2]=AverageS[i-2]+log(Ssel+1)/log(S1+1);
+                AverageN[i-2]=AverageN[i-2]+Nsel/N1;
               }
-              cout << AverageN/(l-countbad) << "\t" << ErrorN/(l-countbad) << "\t" << AverageS/(l-countbad) << "\t" << ErrorS/(l-countbad) << "\t" << l << "\t" << countbad << endl;
+              cout << i << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << l << "\t" << countbad << endl;
             }
             else
             {
@@ -2170,13 +2170,11 @@ void GenerateData(string FileName)
             }
         } 
     }
-    ErrorN=ErrorN/(L-countbad);
-    ErrorS=ErrorS/(L-countbad);
-    AverageN=AverageN/(L-countbad);
-    AverageS=AverageS/(L-countbad);
-    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" <<AverageN << "\t" << ErrorN << "\t" << AverageS << "\t" << ErrorS << "\t" << countbad << endl;
-
-	LRvalues.close();
+    for(i=1;i<=10;i++)
+    {
+	    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" << N << "\t" << i << "\t" << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << l << "\t" << countbad << endl;
+    }
+    LRvalues.close();
 }
 
 
