@@ -2157,8 +2157,8 @@ void GenerateData(string FileName)
               }
               else
               {
-                ErrorS[i-2]=ErrorS[i-2]+abs(log(Ssel+1)-i*log(S1+1))/(i*log(S1+1));
-                ErrorN[i-2]=ErrorN[i-2]+abs(Nsel-N1*1.0/i)/(N1*1.0/i);
+                ErrorS[i-2]=ErrorS[i-2]+abs(log(Ssel+1)-log(S1+1)/i)/(log(S1+1)/i);
+                ErrorN[i-2]=ErrorN[i-2]+abs(Nsel-N1*i)/(N1*i);
                 AverageS[i-2]=AverageS[i-2]+log(Ssel+1)/log(S1+1);
                 AverageN[i-2]=AverageN[i-2]+Nsel/N1;
               }
