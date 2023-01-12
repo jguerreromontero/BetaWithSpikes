@@ -2162,7 +2162,7 @@ void GenerateData(string FileName)
                 AverageS[i-2]=AverageS[i-2]+log(Ssel+1)/log(S1+1);
                 AverageN[i-2]=AverageN[i-2]+Nsel/N1;
               }
-              cout << i << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << l << "\t" << countbad << endl;
+              cout << l << "\t" << i << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << countbad << endl;
             }
             else
             {
