@@ -2137,7 +2137,7 @@ void GenerateData(string FileName)
                 Anext=FindNext(Aini,N,s);
                 Aini=Anext;
             }
-            if(Anext==0||Anext==10000) j--;
+            if(Anext==0||Anext==N) j--;
             else {
                 A[j]=1.0*Anext/N;
                 cout << A[j] << "\t" << Time[j] << "\t";
@@ -2148,8 +2148,8 @@ void GenerateData(string FileName)
         {
             for(j=1;j<=t;j++) Time[j]=Time[j-1]+i;
             LRBWS=LRBetaWithSpikes(A,Time,t,Ndrift,Nsel,Ssel);
-            if(Ssel!=0)
-            {
+            //if(Ssel!=0)
+            //{
               if(i==1)
               {
                   S1=Ssel;
@@ -2163,11 +2163,11 @@ void GenerateData(string FileName)
                 AverageN[i-2]=AverageN[i-2]+Nsel/N1;
               }
               cout << l << "\t" << i << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << countbad << endl;
-            }
-            else
-            {
-                countbad++;
-            }
+            //}
+            //else
+            //{
+            //    countbad++;
+            //}
         } 
     }
     for(i=1;i<=10;i++)
