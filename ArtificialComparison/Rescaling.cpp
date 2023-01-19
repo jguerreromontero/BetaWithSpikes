@@ -2092,7 +2092,7 @@ void GenerateData(string FileName)
     int Time[Tmax], DeltaT[6], N, L, A0, Anext, Aoriginal, Aini, DeltaFactor;
     double LRBWS, s, Xoriginal;
     double A[Tmax], colour, AverageN[10], AverageS[10], ErrorN[10], ErrorS[10];
-    int t, i, j, k, l, ka, ks, countbad;
+    int t, i, j, k, l, ka, ks, countbad[10];
     double Ndrift, Nsel, Ssel, S1, N1;
     string Outname;
     ofstream LRvalues;
@@ -2121,8 +2121,8 @@ void GenerateData(string FileName)
         ErrorS[i]=0;
         AverageN[i]=0;
         AverageS[i]=0;
+	countbad[i]=0;
     }
-    countbad=0;
     for(l=1;l<=L;l++)
     {
         t=5;
@@ -2148,8 +2148,8 @@ void GenerateData(string FileName)
         {
             for(j=1;j<=t;j++) Time[j]=Time[j-1]+i;
             LRBWS=LRBetaWithSpikes(A,Time,t,Ndrift,Nsel,Ssel);
-            //if(Ssel!=0)
-            //{
+            if(Ssel!=0&&!isnan(Ssel))
+            {
               if(i==1)
               {
                   S1=Ssel;
@@ -2162,12 +2162,12 @@ void GenerateData(string FileName)
                 AverageS[i-2]=AverageS[i-2]+log(Ssel+1)/log(S1+1);
                 AverageN[i-2]=AverageN[i-2]+Nsel/N1;
               }
-              cout << l << "\t" << i << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << countbad << endl;
-            //}
-            //else
-            //{
-            //    countbad++;
-            //}
+              cout << l << "\t" << i << AverageN[i-2]/(l-countbad[i-1]) << "\t" << ErrorN[i-2]/(l-countbad[i-1]) << "\t" << AverageS[i-2]/(l-countbad[i-1]) << "\t" << ErrorS[i-2]/(l-countbad[i-1]) << "\t" << countbad[i-1] << endl;
+            }
+            else
+            {
+                countbad[i-1]++;
+            }
         } 
     }
     for(i=1;i<=10;i++)
