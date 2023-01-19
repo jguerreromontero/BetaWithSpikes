@@ -2172,7 +2172,7 @@ void GenerateData(string FileName)
     }
     for(i=1;i<=10;i++)
     {
-	    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" << N << "\t" << i << "\t" << AverageN[i-2]/(l-countbad) << "\t" << ErrorN[i-2]/(l-countbad) << "\t" << AverageS[i-2]/(l-countbad) << "\t" << ErrorS[i-2]/(l-countbad) << "\t" << l << "\t" << countbad << endl;
+	    LRvalues << Aoriginal << "\t" << log(s+1) << "\t" << N << "\t" << i << "\t" << AverageN[i-2]/(l-countbad[i-1]) << "\t" << ErrorN[i-2]/(l-countbad[i-1]) << "\t" << AverageS[i-2]/(l-countbad[i-1]) << "\t" << ErrorS[i-2]/(l-countbad[i-1]) << "\t" << l << "\t" << countbad[i-1] << endl;
     }
     LRvalues.close();
 }
