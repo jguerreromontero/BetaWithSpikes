@@ -19,7 +19,7 @@ void GenerateData(string FileName)
 	ifstream Data;
 	ofstream LRvalues;
 	string tag, tagini, Outname;
-	Data.open.open(FileName.c_str());
+	Data.open(FileName.c_str());
 	Outname = "Results" + FileName;
 	LRvalues.open(Outname.c_str());
 	tagini = "";//Initialise the tag to an empty one (files should have a nonempty tag)
