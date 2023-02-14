@@ -47,8 +47,8 @@ void GenerateData(string FileName)
             Data >> freq;
             Time[0]=0;
             A[0]=freq;
-            if(PartialCount==0) Aini=0.5/TotalCount;
-            if(PartialCount==TotalCount) Aini=1-0.5/TotalCount; //These are here to avoid absorption events in the middle of the time series
+            if(PartialCount==0) A[0]=0.5/TotalCount;
+            if(PartialCount==TotalCount) A[0]=1-0.5/TotalCount; //These are here to avoid absorption events in the middle of the time series
             tagini=tag;
             counter++;
         }
@@ -61,8 +61,8 @@ void GenerateData(string FileName)
             Data >> freq;
             Time[t]=Tfin-Tini;//We just get increments now, we normalise wrt the gcd later
             A[t]=freq;
-            if(PartialCount==0) Aini=0.5/TotalCount;
-            if(PartialCount==TotalCount) Aini=1-0.5/TotalCount; //These are here to avoid absorption events in the middle of the time series
+            if(PartialCount==0) A[t]=0.5/TotalCount;
+            if(PartialCount==TotalCount) A[t]=1-0.5/TotalCount; //These are here to avoid absorption events in the middle of the time series
         }
     }
     //This here is to analyse the last time series, which would be skipped otherwise as Data.eof() is true
