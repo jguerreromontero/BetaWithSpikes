@@ -14,7 +14,7 @@
 
 #define Tmax 501 //Maximal number of time steps.
 #define MaxStepLimit 100
-#define mesh 0.001
+#define mesh 0.002
 #define PI 3.1415926535
 
 using namespace std;
@@ -24,7 +24,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 //This is the fitness function with the symmetric selection parameter.
-//That definition of the selection parameter is used in all functions except those involving integrals, 
+//That definition of the selection parameter is used in all functions except those involving integrals,
 //in which the fitness function using the asymmetric parameter is prefered.
 //s: selection coefficient; x: proportion / count of allele A at initial time in the series.
 double GFunction(double S, double x)
@@ -362,25 +362,25 @@ double ReturnProbBWS(double A1, double a, double b, double P0, double P1, double
     double DeltaX;
     if(A1<mesh)
     {
-        if(a>=1) return log(P0+(1-P0-P1)*AdaptiveTrapezoidNode(a,b,s,0,a,b,0,0.0,mesh,1,0,0));
+        if(a>=1) return log(P0+(1-P0-P1)*AdaptiveTrapezoidNode(a,b,s,0,a,b,0,0.0,A1+0.5*mesh,1,0,0));
         else
         {
             if(isnan(a)) return 0;
             else{
                 DeltaX=Pole0SizeEstimation(a,b,s,0,a,b,0);
-                return log(P1+(1-P0-P1)*(Pole0Integral(a,b,s,0,DeltaX,a,b,0)+AdaptiveTrapezoidNode(a,b,s,0,a,b,0,DeltaX,mesh,1,0,0)));
+                return log(P1+(1-P0-P1)*(Pole0Integral(a,b,s,0,DeltaX,a,b,0)+AdaptiveTrapezoidNode(a,b,s,0,a,b,0,DeltaX,A1+0.5*mesh,1,0,0)));
             }
         }
     }
     else if(A1>1.0-mesh)
     {
-        if(b>=1) return log(P1+(1-P0-P1)*AdaptiveTrapezoidNode(a,b,s,0,a,b,0,1.0-mesh,1.0,1,0,0));
+        if(b>=1) return log(P1+(1-P0-P1)*AdaptiveTrapezoidNode(a,b,s,0,a,b,0,A1-0.5*mesh,1.0,1,0,0));
         else
         {
             if(isnan(b)) return 0;
             else{
                 DeltaX=Pole1SizeEstimation(a,b,s,0,a,b,0);
-                return log(P1+(1-P0-P1)*(Pole1Integral(a,b,s,0,DeltaX,a,b,0)+AdaptiveTrapezoidNode(a,b,s,0,a,b,0,1.0-mesh,1.0-DeltaX,1,0,0)));
+                return log(P1+(1-P0-P1)*(Pole1Integral(a,b,s,0,DeltaX,a,b,0)+AdaptiveTrapezoidNode(a,b,s,0,a,b,0,A1-0.5*mesh,1.0-DeltaX,1,0,0)));
             }
         }
     }
