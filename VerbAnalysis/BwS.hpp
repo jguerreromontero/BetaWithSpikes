@@ -14,7 +14,7 @@
 
 #define Tmax 501 //Maximal number of time steps.
 #define MaxStepLimit 100
-#define mesh 0.001
+#define mesh 0.0002
 #define PI 3.1415926535
 
 using namespace std;
