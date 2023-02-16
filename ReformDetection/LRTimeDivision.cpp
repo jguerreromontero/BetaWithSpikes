@@ -9,7 +9,7 @@
 #include<limits>
 #include "BwS.hpp"
 
-void GenerateData()
+void GenerateData(string FileName)
 {
     int Tini, Tfin, Time[Tmax], DeltaT, Tdiv;
 	double Aini, freq,LR,PartialCount,TotalCount;
@@ -19,9 +19,10 @@ void GenerateData()
 	bool approx;
 	ifstream Data;
 	ofstream LRvalues;
-	string tag, tagini;
-	Data.open("C:\\Users\\s2111568\\Documents\\BwSLanguagePaper\\1yDataNEW1.txt");
-	LRvalues.open("C:\\Users\\s2111568\\Documents\\BwSLanguagePaper\\1yResultsNEW1.txt");
+	string tag, tagini, Outname;
+	Data.open(FileName.c_str());
+	Outname = "Results" + FileName;
+	LRvalues.open(Outname.c_str());
 	tagini = "";//Initialise the tag to an empty one (files should have a nonempty tag)
 	counter = 0;
 	L = 500; //Number of time series used in p-value statistics
@@ -92,9 +93,31 @@ void GenerateData()
 // MAIN FUNCTION //
 ///////////////////
 
-int main()
+bool parse_file_name(int argc, char* argv[], string& FileName) {
+    if(argc != 2){
+        cerr << "Required argument: <Name of Parameter File>" << endl;
+        return false;
+    }
+    try{
+        FileName= argv[1];
+    }
+    catch (exception& ex) {
+        cerr << "Cannot parse File Name: " << ex.what() << endl;
+        return false;
+    }
+    return true;
+}
+
+
+int main(int argc, char* argv[])
 {
-	srand(time(NULL));
-	GenerateData();
-	return 0;
+    string FileName;
+    if(parse_file_name(argc,argv,FileName))
+    {
+        srand(time(NULL));
+        GenerateData(FileName);
+        return 0;
+    }
+
+    else return EXIT_FAILURE;
 }
