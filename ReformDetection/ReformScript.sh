@@ -17,4 +17,4 @@ input_file=ReformDATA${SLURM_ARRAY_TASK_ID}.txt
 output_file=output${SLURM_ARRAY_TASK_ID}.txt
 filename="ReformDATA${SLURM_ARRAY_TASK_ID}.txt"
 
-./LRReform.exe $filename
+./LRTimeDivision.exe $filename
