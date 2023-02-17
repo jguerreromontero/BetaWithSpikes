@@ -1080,9 +1080,13 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 			tlimit=t;
 			if((A1==0)||(A1==N)) break;
 		}
-        TimespanDivision(A,Time,tlimit,param,Tdiv,LRvalue,approx);
-        if(LRvalue>Threshold) counter++;
-        cout << LRvalue << "\t" << counter <<  "\t" << l << "\t" << counter*1.0/l << endl;
+		if(numberofT==T)
+		{
+        	TimespanDivision(A,Time,tlimit,param,Tdiv,LRvalue,approx);
+        	if(LRvalue>Threshold) counter++;
+        	cout << LRvalue << "\t" << counter <<  "\t" << l << "\t" << counter*1.0/l << endl;
+		}
+		else l--;
 	}
 	p=counter*1.0/L;
 	return p;
