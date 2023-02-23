@@ -14,7 +14,7 @@
 
 #define Tmax 501 //Maximal number of time steps.
 #define MaxStepLimit 100
-#define mesh 0.0002
+#define mesh 0.0001
 #define PI 3.1415926535
 
 using namespace std;
@@ -38,6 +38,18 @@ double GFunction(double S, double x)
 double G(double s, double A)
 {
 	return A*(s+1.0)/(A*s+1.0);
+}
+
+//First derivative of the fitness funtion with asymmetric selection parameter.
+double GPrime(double s, double A)
+{
+    return(s+1.0)/((A*s + 1)*(A*s+1));
+}
+
+//Second derivative of the fitness function with asymmetric selection parameter
+double GSecond(double s, double A)
+{
+    return -2.0*(s+1.0)*s/pow(A*s + 1,3);
 }
 
 //This function generates the logarithm of the cumulative Wright-Fisher distribution.
@@ -102,9 +114,9 @@ int FindNext(int A0, int N, double s)
 	}
 }
 
-///////////////////////////////////////////////////////////////////
-// 2. FUNCTIONS USED TO COMPUTE THE BETA WITH SPIKES PROBABILITY //
-///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// 2. FUNCTIONS USED TO INTEGRATE THE BETA WITH SPIKES TRANSITION PROBABILITY //
+////////////////////////////////////////////////////////////////////////////////
 
 //This function returns the logarithm of the beta function of two real numbers.
 //Uses approximation to improve efficiency and avoid overflow for big arguments.
@@ -119,20 +131,6 @@ double logbeta(double x, double y)
 	if(x+y<1e13) log3=lgamma(x+y);
 	else log3=(x+y-0.5)*log(x+y)-x-y+0.5*log(2*PI);
 	return log1+log2-log3;
-}
-
-//This function computes the coefficient alpha from the Beta distribution in terms of its average and variance.
-//E: average of the distribution; V: variance of the distribution.
-double alphastar(double E, double C, double N)
-{
-	return (((1.0-1.0/N)*E-C)/(C+E/N-E*E))*E;
-}
-
-//This function computes the coefficient beta from the Beta distribution in terms of its average and variance.
-//E: average of the distribution; V: variance of the distribution.
-double betastar(double E, double C, double N)
-{
-	return (((1.0-1.0/N)*E-C)/(C+E/N-E*E))*(1.0-E);
 }
 
 //This function estimates the Dx used in the Taylor expansion around the pole at x=1 when beta<1
@@ -324,6 +322,24 @@ double Integral(double a, double b, double s, double N, double truea, double tru
     return Sum;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 3.1 FUNCTIONS USED TO COMPUTE THE BWS MOMENTS AND PARAMETERS UNDER THE SELF-CONTAINED APPROXIMATION //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//This function computes the coefficient alpha from the Beta distribution in terms of its average and variance.
+//E: average of the distribution; V: variance of the distribution.
+double alphastar(double E, double C, double N)
+{
+	return (((1.0-1.0/N)*E-C)/(C+E/N-E*E))*E;
+}
+
+//This function computes the coefficient beta from the Beta distribution in terms of its average and variance.
+//E: average of the distribution; V: variance of the distribution.
+double betastar(double E, double C, double N)
+{
+	return (((1.0-1.0/N)*E-C)/(C+E/N-E*E))*(1.0-E);
+}
+
 //This function computes P0 for intermediate time steps without known values of A.
 //P0: value of the spike at 0 at the previous time step; P1: value of the spike at 1 at the previous time step;
 //a: alpha coefficient of the beta distribution at the previous time; b: beta coefficient of the beta distribution at the previous time;
@@ -349,10 +365,55 @@ double Estar(double a, double b, double s)
 }
 
 //This function computes Cstar (the expectation value of g(x)^2 conditioned on no absorption events) for intermediate time steps.
+//We use this C instead of V as it requires less integration steps with our Integral function.
 double Cstar(double a, double b, double s, double N)
 {
 	return (s+1)*(s+1)*(1-1.0/N)*Integral(a+2,b,s,2,a,b,0);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 3.2 FUNCTIONS USED TO COMPUTE THE BWS MOMENTS AND PARAMETERS UNDER THE SECOND ORDER TAYLOR APPROXIMATION //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//All functions for the same parameters as before, using a second order Taylor approximation.
+
+double alphastarT(double E, double V)
+{
+	return (E*(1-E)/V-1)*E;
+}
+
+double betastarT(double E, double V)
+{
+	return (E*(1-E)/V-1)*(1-E);
+}
+
+double P0nT(double P0, double P1, double a, double b, double s, double N)
+{
+	return P0+(1-P0-P1)*exp(logbeta(a,b+N)-logbeta(a,b));
+}
+
+double P1nT(double P0, double P1, double a, double b, double s, double N)
+{
+	return P1+(1-P0-P1)*exp(logbeta(a+N,b)-logbeta(a,b));
+}
+
+//EApprox and VApprox compute the regular E and V, not the ones conditioned to no absorption events.
+
+double ET(double E, double V, double s)
+{
+    return G(s,E)+0.5*V*GSecond(s,E);
+}
+
+double VT(double E, double V, double s, double N)
+{
+    double Enow;
+    Enow=ET(E,V,s);
+    return Enow*(1-Enow)/N+(1-1/N)*V*GPrime(s,E)*GPrime(s,E);
+}
+
+/////////////////////////////////////////////////////////////
+// 4. FUNCTIONS THAT RETURN THE BWS TRANSITION PROBABILITY //
+/////////////////////////////////////////////////////////////
 
 //This function computes the log of the probability returned by the BwS distribution, given known A1, a, b, P0, P1 and s
 //It uses the average over a mesh defined as a global parameter rather than evaluating at a single point or making the mesh depend on N.
@@ -392,31 +453,61 @@ double ReturnProbBWS(double A1, double a, double b, double P0, double P1, double
 //This needs to compute every single intermediate step if the interval between values does not match the interval between generations.
 //A1: final value of the allele proportion at the end of the interval; A0: initial value of the allele proportion;
 //T1: final time; T0: initial time; N: population size; s: selection coefficient
-double logProbBWS(double A1, double A0, int T1, int T0, double N, double s)
+//The boolean approx determines whether a self-contained (default) or Taylor expansion (approx = true) is used.
+double logProbBWS(double A1, double A0, int T1, int T0, double N, double s, bool approx = false)
 {
 	double P0ini, P1ini, P0next, P1next;
-	double E, C;
+	double E, C, V, Ec, Vc, Enext, Vnext;
 	double Aini;
 	double a, b;
 	int t;
 	s=exp(s)-1; //For the intergrals, it is more convenient to use the old definition of s.
 	Aini=G(s,A0);
-    P0ini=exp(N*log(1-Aini));
-    P1ini=exp(N*log(Aini));
-    E=(Aini-P1ini)/(1-P1ini-P0ini);
-    C=(N-1)*(Aini*Aini-P1ini)/(N*(1-P1ini-P0ini));
-    a=alphastar(E,C,N);
-    b=betastar(E,C,N);
-    for(t=T0+1;T1>t;t+=1)
+	if(approx) //If using the Taylor approximation
     {
-        E=Estar(a,b,s);
-        C=Cstar(a,b,s,N);
-        P0next=P0n(P0ini,P1ini,a,b,s,N);
-        P1next=P1n(P0ini,P1ini,a,b,s,N);
+        P0ini=exp(N*log(1-Aini));
+		P1ini=exp(N*log(Aini));
+		E=Aini;
+		V=Aini*(1-Aini)/N;
+		Ec=(E-P1ini)/(1-P1ini-P0ini);
+		Vc=(V+E*E-P1ini)/(1-P1ini-P0ini)-Ec*Ec;
+		a=alphastarT(Ec,Vc);
+		b=betastarT(Ec,Vc);
+		for(t=T0+1;T1>t;t++)
+		{
+			P0next=P0nT(P0ini,P1ini,a,b,s,N);
+			P1next=P1nT(P0ini,P1ini,a,b,s,N);
+		    Enext=ET(E,V,s);
+		    Vnext=VT(E,V,s,N);
+			P0ini=P0next;
+			P1ini=P1next;
+			E=Enext;
+			V=Vnext;
+			Ec=(E-P1ini)/(1-P1ini-P0ini);
+            Vc=(V+E*E-P1ini)/(1-P1ini-P0ini)-Ec*Ec;
+            a=alphastarT(Ec,Vc);
+            b=betastarT(Ec,Vc);
+		}
+    }
+    else //Otherwise, if using the self-contained approximation (default)
+    {
+        P0ini=exp(N*log(1-Aini));
+        P1ini=exp(N*log(Aini));
+        E=(Aini-P1ini)/(1-P1ini-P0ini);
+        C=(N-1)*(Aini*Aini-P1ini)/(N*(1-P1ini-P0ini));
         a=alphastar(E,C,N);
         b=betastar(E,C,N);
-        P0ini=P0next;
-        P1ini=P1next;
+        for(t=T0+1;T1>t;t++)
+        {
+            E=Estar(a,b,s);
+            C=Cstar(a,b,s,N);
+            P0next=P0n(P0ini,P1ini,a,b,s,N);
+            P1next=P1n(P0ini,P1ini,a,b,s,N);
+            a=alphastar(E,C,N);
+            b=betastar(E,C,N);
+            P0ini=P0next;
+            P1ini=P1next;
+        }
     }
     return ReturnProbBWS(A1,a,b,P0ini,P1ini,s);
 }
@@ -424,14 +515,14 @@ double logProbBWS(double A1, double A0, int T1, int T0, double N, double s)
 //This function computes the logarithm of the likelihood of a time series assuming BWS transition probabilities with selection.
 //A[]: time series of allele proportion A; Time[]: real values of time at each time step; T: # of times steps; N: population size;
 //S: selection coefficient.
-double logLikelihoodBWS(double A[Tmax], int Time[Tmax], int T, double N, double s)
+double logLikelihoodBWS(double A[Tmax], int Time[Tmax], int T, double N, double s, bool approx = false)
 {
 	double logP, p0;
 	int t;
 	logP=0.0;
 	for(t=1;t<=T;t++)
 	{
-		p0=logProbBWS(A[t],A[t-1],Time[t],Time[t-1],N,s);
+		p0=logProbBWS(A[t],A[t-1],Time[t],Time[t-1],N,s,approx);
 		logP=logP+p0;
 	}
 	return logP;
@@ -483,7 +574,7 @@ void ComputeSIni(double A[Tmax], int Time[Tmax], int T, double& smin, double& sm
 }
 
 //This function find the value of N that maximises the likelihood of a time series given s
-double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, double& LR)
+double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, double& LR, bool approx = false)
 {
     double Nup, Ndown, N, Na, Nb, Nprime;
     double Lup, Ldown, L, La, Lb, Lprime;
@@ -497,8 +588,8 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
     Ndown=NminIni;
     while(!upmax||!lomax) //upmax: the maximum is below the upper limit of the interval; lomax: the maximum is above the lower limit of the interval
     {
-        Lup=logLikelihoodBWS(A,Time,T,Nup,s);
-        Ldown=logLikelihoodBWS(A,Time,T,Ndown,s);
+        Lup=logLikelihoodBWS(A,Time,T,Nup,s,approx);
+        Ldown=logLikelihoodBWS(A,Time,T,Ndown,s,approx);
         if((isinf(Lup)||isnan(Lup))||(isnan(Ldown)||isinf(Ldown))) rangefound=false;
         else rangefound=true;
         while(!rangefound)
@@ -510,21 +601,21 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
             {
                 Ndown=Ndown*1.1;
                 Nup=Nup/1.1;
-                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s);
-                Lup=logLikelihoodBWS(A,Time,T,Nup,s);
+                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s,approx);
+                Lup=logLikelihoodBWS(A,Time,T,Nup,s,approx);
                 if(!isinf(Lup)&&!isnan(Lup)) rangefound=true;
                 if(!isinf(Ldown)&&!isnan(Ldown)) rangefound=true;
             }
             while((isinf(Ldown)||isnan(Ldown))&&(Nup>Ndown))
             {
                 Ndown=Ndown*1.1;
-                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s);
+                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s,approx);
                 rangefound=true;
             }
             while((isinf(Lup)||isnan(Lup))&&(Nup>Ndown))
             {
                 Nup=Nup/1.1;
-                Lup=logLikelihoodBWS(A,Time,T,Nup,s);
+                Lup=logLikelihoodBWS(A,Time,T,Nup,s,approx);
                 rangefound=true;
             }
             //If after looking inside the initial range nothing's found, we extend it
@@ -532,10 +623,10 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
             {
                 NmaxIni=max(10*NmaxIni,1e6);
                 Nup=NmaxIni;
-                Lup=logLikelihoodBWS(A,Time,T,Nup,s);
+                Lup=logLikelihoodBWS(A,Time,T,Nup,s,approx);
                 NminIni=min(0.1*NminIni,5.0);
                 Ndown=NminIni;
-                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s);
+                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s,approx);
             }
         }
         //Once an interval with finite values of the likelihood is found, we look for the maximum in it.
@@ -546,12 +637,12 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
             if(!theresmax)
             {
                 N=(Nup+Ndown)*0.5;
-                L=logLikelihoodBWS(A,Time,T,N,s);
+                L=logLikelihoodBWS(A,Time,T,N,s,approx);
             }
             Na=0.25*Nup+0.75*Ndown;
             Nb=0.75*Nup+0.25*Ndown;
-            La=logLikelihoodBWS(A,Time,T,Na,s);
-            Lb=logLikelihoodBWS(A,Time,T,Nb,s);
+            La=logLikelihoodBWS(A,Time,T,Na,s,approx);
+            Lb=logLikelihoodBWS(A,Time,T,Nb,s,approx);
             //cout << "List N " << "\t" << Ndown << "\t" << Na << "\t" << N << "\t" << Nb << "\t" << Nup << endl;
             //cout << "List LN" << "\t" << Ldown << "\t" << La << "\t" << L << "\t" << Lb << "\t" << Lup << endl;
             //Under the assumption that the maximum is unique, the following two conditions are equivalent to the maximum not being in the interval
@@ -600,29 +691,29 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
         //If Ndown and Nup are very close but no maximum is between them, the interval is extended and the process is repeated.
         if(!upmax&&((NmaxIni-Ndown)/Ndown<=0.001))
         {
-            Nprime=Nup;
-            Lprime=Lup;
+            Nprime=Nb;
+            Lprime=Lb;
             do{
                 Ndown=Nprime;
                 Ldown=Lprime;
                 Nprime=Nup;
                 Lprime=Lup;
                 Nup=Nup*5;
-                Lup=logLikelihoodBWS(A,Time,T,Nup,s);
+                Lup=logLikelihoodBWS(A,Time,T,Nup,s,approx);
             }while(Lup>Lprime);
             NmaxIni=Nup;
         }
         if(!lomax&&((Nup-NminIni)/NminIni<=0.001))
         {
-            Nprime=Ndown;
-            Lprime=Ldown;
+            Nprime=Na;
+            Lprime=La;
             do{
                 Nup=Nprime;
                 Lup=Lprime;
                 Nprime=Ndown;
                 Lprime=Ldown;
                 Ndown=max(5.0,0.2*Ndown);
-                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s);
+                Ldown=logLikelihoodBWS(A,Time,T,Ndown,s,approx);
             }while(Ldown>Lprime&&!isnan(Ldown)&&Ndown>=5.0);
             NminIni=Ndown;
         }
@@ -632,7 +723,7 @@ double OptimiseNParameter(double A[Tmax], int Time[Tmax], int T, double s, doubl
 }
 
 //This function does exactly the same as the previous one, for S given N
-double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, double& LR)
+double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, double& LR, bool approx = false)
 {
     double Sup, Sdown, S, Sa, Sb, Sprev, Sprime;
     double Lup, Ldown, L, La, Lb, Lprime;
@@ -645,8 +736,8 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
     Sdown=SminIni;
     while(!upmax||!lomax)
     {
-        Lup=logLikelihoodBWS(A,Time,T,N,Sup);
-        Ldown=logLikelihoodBWS(A,Time,T,N,Sdown);
+        Lup=logLikelihoodBWS(A,Time,T,N,Sup,approx);
+        Ldown=logLikelihoodBWS(A,Time,T,N,Sdown,approx);
         if((isinf(Lup)||isnan(Lup))||(isnan(Ldown)||isinf(Ldown))) rangefound=false;
         else rangefound=true;
         while(!rangefound)
@@ -655,31 +746,31 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
             {
                 Sdown=Sdown+0.05*(Sup-Sdown);
                 Sup=Sup-0.05*(Sup-Sdown);
-                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown);
-                Lup=logLikelihoodBWS(A,Time,T,N,Sup);
+                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown,approx);
+                Lup=logLikelihoodBWS(A,Time,T,N,Sup,approx);
                 if(!isinf(Lup)&&!isnan(Lup)) rangefound=true;
                 if(!isinf(Ldown)&&!isnan(Ldown)) rangefound=true;
             }
             while((isinf(Ldown)||isnan(Ldown))&&Sup-Sdown>0.001)
             {
                 Sdown=Sdown+0.05*(Sup-Sdown);
-                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown);
+                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown,approx);
                 rangefound=true;
             }
             while((isinf(Lup)||isnan(Lup))&&Sup-Sdown>0.001)
             {
                 Sup=Sup-0.05*(Sup-Sdown);
-                Lup=logLikelihoodBWS(A,Time,T,N,Sup);
+                Lup=logLikelihoodBWS(A,Time,T,N,Sup,approx);
                 rangefound=true;
             }
             if(!rangefound)
             {
                 SmaxIni=SmaxIni+0.1;
                 Sup=SmaxIni;
-                Lup=logLikelihoodBWS(A,Time,T,N,Sup);
+                Lup=logLikelihoodBWS(A,Time,T,N,Sup,approx);
                 SminIni=SminIni-0.1;
                 Sdown=SminIni;
-                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown);
+                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown,approx);
             }
         }
         theresmax=false;
@@ -688,12 +779,12 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
             if(!theresmax)
             {
                 S=(Sup+Sdown)*0.5;
-                L=logLikelihoodBWS(A,Time,T,N,S);
+                L=logLikelihoodBWS(A,Time,T,N,S,approx);
             }
             Sa=Sup*0.25+Sdown*0.75;
-            La=logLikelihoodBWS(A,Time,T,N,Sa);
+            La=logLikelihoodBWS(A,Time,T,N,Sa,approx);
             Sb=Sup*0.75+Sdown*0.25;
-            Lb=logLikelihoodBWS(A,Time,T,N,Sb);
+            Lb=logLikelihoodBWS(A,Time,T,N,Sb,approx);
             //cout << "List S " << "\t" << Sdown << "\t" << Sa << "\t" << S << "\t" << Sb << "\t" << Sup << endl;
             //cout << "List LS" << "\t" << Ldown << "\t" << La << "\t" << L << "\t" << Lb << "\t" << Lup << endl;
             if(La<Ldown)
@@ -739,29 +830,29 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
         }while((Sup-Sdown)>0.001);
         if(!upmax&&(SmaxIni-Sdown)<=0.001)
         {
-            Sprime=Sup;
-            Lprime=Lup;
+            Sprime=Sb;
+            Lprime=Lb;
             do{
                 Sdown=Sprime;
                 Ldown=Lprime;
                 Sprime=Sup;
                 Lprime=Lup;
                 Sup=Sup+0.1;
-                Lup=logLikelihoodBWS(A,Time,T,N,Sup);
+                Lup=logLikelihoodBWS(A,Time,T,N,Sup,approx);
             }while(Lup>Lprime);
             SmaxIni=Sup;
         }
         if(!lomax&&((Sup-SminIni)<=0.001))
         {
-            Sprime=Sdown;
-            Lprime=Ldown;
+            Sprime=Sa;
+            Lprime=La;
             do{
                 Sup=Sprime;
                 Lup=Lprime;
                 Sprime=Sdown;
                 Lprime=Ldown;
                 Sdown=Sdown-0.1;
-                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown);
+                Ldown=logLikelihoodBWS(A,Time,T,N,Sdown,approx);
             }while(Ldown>Lprime);
             SminIni=Sdown;
         }
@@ -773,7 +864,7 @@ double OptimiseSParameter(double A[Tmax], int Time[Tmax], int T, double N, doubl
 //This function find the maximal likelihood from a matrix, as well as the corresponding values of the population size and the selection.
 //Lmtx[][]: matrix of likelihoods; Nsel: variable to store the population size corresponding to maximal likelihood;
 //Ssel: variable to store the selection coefficient corresponding to maximal likelihood.
-void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& N, double& S, double& L)
+void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& N, double& S, double& L, bool approx = false)
 {
     double Nprev, Sprev, Lprev, maxS, maxN, maxL;
     maxS=0;
@@ -781,12 +872,14 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& N, double&
     N=maxN;
     S=maxS;
     L=maxL;
+    //cout << N << "\t" << S << "\t" << L << endl;
     do
     {
         Nprev=N;
         Sprev=S;
         Lprev=L;
-        S=OptimiseSParameter(A,Time,T,N,L);
+        S=OptimiseSParameter(A,Time,T,N,L, approx);
+        //cout << N << "\t" << S << "\t" << L << endl;
         if(L>maxL)
         {
             maxL=L;
@@ -797,7 +890,8 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& N, double&
             S=maxS;
             L=maxL;
         }
-        N=OptimiseNParameter(A,Time,T,S,L);
+        N=OptimiseNParameter(A,Time,T,S,L, approx);
+        //cout << N << "\t" << S << "\t" << L << endl;
         if(L>maxL)
         {
             maxL=L;
@@ -813,7 +907,7 @@ void OptimiseSelection(double A[Tmax], int Time[Tmax], int T, double& N, double&
 
 //Function that computes the likelihood ratio of a time series for models with and without selection, with BWS approximation.
 //A[]: time series; Time[]: vector containing the real time values; T: the total amount of time steps.
-double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, double& Nsel, double& Ssel)
+double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, double& Nsel, double& Ssel, bool approx = false)
 {
     double LRd, LRs;
     int i;
@@ -851,9 +945,9 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
         }
         else
         {
-            Ndrift=OptimiseNParameter(A,Time,T,0,LRd);
+            Ndrift=OptimiseNParameter(A,Time,T,0,LRd,approx);
             Nsel=numeric_limits<double>::infinity();
-            Ssel=OptimiseSParameter(A,Time,T,Ndrift,LRs);
+            Ssel=OptimiseSParameter(A,Time,T,Ndrift,LRs,approx);
             if(0<LRd) return 0;
             else return -2*LRd;
         }
@@ -861,9 +955,9 @@ double LRBetaWithSpikes(double A[Tmax], int Time[Tmax], int T, double& Ndrift, d
     //In the general case
     else
     {
-        Ndrift=OptimiseNParameter(A,Time,T,0,LRd);
+        Ndrift=OptimiseNParameter(A,Time,T,0,LRd,approx);
         Nsel=Ndrift;
-        OptimiseSelection(A,Time,T,Nsel,Ssel,LRs);
+        OptimiseSelection(A,Time,T,Nsel,Ssel,LRs,approx);
         if(LRs<LRd) return 0;
         else return 2*(LRs-LRd);
     }
@@ -895,19 +989,19 @@ int gcdNormaliseList(int List[Tmax], int L)
     return result;
 }
 
-void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], int& Tdiv, double& L, int N)
+//Function that
+void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], int& Tdiv, double& L, bool approx = false)
 {
     int i,j, imax, T1[Tmax];
     double Ldiv1, Ldiv2, LR, Lnodiv, Lmax, A1[Tmax];
-    double N0, S0, N1, S1, N2, S2, Ndiv;
-    N0=N;
-    if(A[T]>1.0||A[T]<0.0) T--;
-    OptimiseSelection(A,Time,T,N0,S0,Lnodiv);
+    double N, N0, S0, N1, S1, N2, S2, Ndiv;
+    N0=1000; //Just an initial value for N to be optimised
+    OptimiseSelection(A,Time,T,N0,S0,Lnodiv,approx);
     N=N0;
     Lmax=Lnodiv;
     param[1]=S0;
-    for(i=2;i<=T-2;i=min(i+5,T-1))
-    //for(i=2;i<=T-2;i++)
+    //for(i=2;i<=T-2;i=min(i+5,T-1))
+    for(i=2;i<=T-2;i++)
     {
         N1=N;
         N2=N;
@@ -916,8 +1010,8 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], i
             A1[j]=A[j+i];
             T1[j]=Time[j+i];
         }
-        OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
-        OptimiseSelection(A1,T1,T-i,N2,S2,Ldiv2);
+        OptimiseSelection(A,Time,i,N1,S1,Ldiv1,approx);
+        OptimiseSelection(A1,T1,T-i,N2,S2,Ldiv2,approx);
         cout << i << "\t" << Ldiv1+Ldiv2 << endl;
         if(Ldiv1+Ldiv2>Lmax)
         {
@@ -939,8 +1033,8 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], i
             A1[j]=A[j+i];
             T1[j]=Time[j+i];
         }
-        OptimiseSelection(A,Time,i,N1,S1,Ldiv1);
-        OptimiseSelection(A1,T1,T-i,N2,S2,Ldiv2);
+        OptimiseSelection(A,Time,i,N1,S1,Ldiv1,approx);
+        OptimiseSelection(A1,T1,T-i,N2,S2,Ldiv2,approx);
         if(Ldiv1+Ldiv2>Lmax)
         {
             Lmax=Ldiv1+Ldiv2;
@@ -955,15 +1049,14 @@ void TimespanDivision(double A[Tmax], int Time[Tmax], int T,  double param[6], i
     L=Lmax-Lnodiv;
 }
 
-double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, double A0)
+double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, double A0, int L, bool approx = false)
 {
-	int t, l, counter, L, trueT, tlimit, numberofT, Tdiv;
+	int t, l, counter, trueT, tlimit, numberofT, Tdiv;
 	double A[T], LRvalue, p, A1, Aini;
 	double Ndrift, Nsel, Ssel;
 	double param[6];
 	srand(time(NULL));
 	counter=0;
-	L=200;
 	for(l=0;l<L;l++)
 	{
 		A[0]=A0;
@@ -987,17 +1080,19 @@ double pValueTimeDiv(double Threshold, int N, double s, int Time[Tmax], int T, d
 			tlimit=t;
 			if((A1==0)||(A1==N)) break;
 		}
-        TimespanDivision(A,Time,tlimit,param,Tdiv,LRvalue,N);
-        if(LRvalue>Threshold) counter++;
-        cout << LRvalue << "\t" << counter <<  "\t" << l << "\t" << counter*1.0/l << endl;
+		if(numberofT==T)
+		{
+        	TimespanDivision(A,Time,tlimit,param,Tdiv,LRvalue,approx);
+        	if(LRvalue>Threshold) counter++;
+        	cout << LRvalue << "\t" << counter <<  "\t" << l << "\t" << counter*1.0/l << endl;
+		}
+		else l--;
 	}
 	p=counter*1.0/L;
 	return p;
 }
 
-
-
-double pValue(double Threshold, int N, int Time[], int T, double A0, int L)
+double pValue(double Threshold, int N, int Time[], int T, double A0, int L, bool approx = false)
 {
 	int t, l, j, counter, trueT, tlimit, numberofT;
 	double A[Tmax], LRvalue, p, A1, Aini;
@@ -1030,7 +1125,7 @@ double pValue(double Threshold, int N, int Time[], int T, double A0, int L)
 		if(numberofT==T)
         {
         //for(j=0;j<=tlimit;j++) cout << A[j] << "\t" << Time[j] << endl;
-        LRvalue=LRBetaWithSpikes(A,Time,tlimit,Ndrift,Nsel,Ssel);
+        LRvalue=LRBetaWithSpikes(A,Time,tlimit,Ndrift,Nsel,Ssel,approx);
         if(LRvalue>Threshold) counter++; //normalised by the amount of intervals, NOT the amount of time points.
         cout << l << "\t" << LRvalue << "\t" << Nsel << "\t" << Ssel << "\t" << counter*1.0/l << endl;
         }
