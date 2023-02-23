@@ -5,7 +5,7 @@
 #SBATCH --job-name=VerbAnalysis
 #SBATCH --partition=short
 #SBATCH --time=12:00:00
-#SBATCH --array=1-3
+#SBATCH --array=1-4
 #SBATCH --mem=10M
 #
 ########################################################################
